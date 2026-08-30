@@ -1,20 +1,20 @@
-# TA1-TIC-UTP
-
+<h1 align="center">TA1-TIC-UTP</h1>
 
 ## Diseño del Workflow (n8n)
 
-El flujo consta de 4 nodos:
+El flujo tiene 4 nodos y sigue una lógica simple: recibir datos, limpiarlos, filtrarlos, y avisar por correo.
 
-1. **Webhook** (Trigger, método POST) — punto de entrada que recibe los datos simulando un formulario externo.
-2. **Edit Fields (Set)** — extrae y formatea los campos `nombre` y `email` del body recibido.
-3. **If** — filtra el flujo, permitiendo continuar solo si el campo `email` no está vacío.
-4. **Gmail (Send a message)** — envía una notificación por correo con los datos procesados.
+Arranca con un **Webhook** que escucha peticiones POST, como si fuera la entrada de un formulario externo. Lo que llega ahí pasa a **Edit Fields**, que toma el body crudo y saca solo lo que necesitamos: `nombre` y `email`. Después viene un nodo **If** que corta el flujo si el email viene vacío — una validación mínima pero necesaria. Y si pasa ese filtro, el último nodo es **Gmail**, que manda la notificación con los datos ya procesados.
 
-El archivo exportado se encuentra en `workflows/workflow.json`.
+El JSON exportado vive en `workflows/workflow.json`.
 
-### Prueba del flujo
+## Cómo ejecutarlo
 
-Se probó ejecutando el workflow en modo test y enviando una petición de prueba con `curl`:
+Con n8n ya corriendo en Docker (`docker compose up -d`), entra al editor desde el navegador y usa el menú `⋯` → **Import from File** para cargar `workflows/workflow.json`. Vas a ver los 4 nodos conectados tal como se describió arriba.
+
+Antes de probarlo hay un paso obligatorio: conectar la cuenta de Gmail en el nodo correspondiente. n8n nunca guarda credenciales dentro del JSON por seguridad, así que cada quien tiene que autorizar la suya (más abajo están los pasos completos para eso).
+
+Ya con la credencial lista, dale a **Execute workflow** — el Webhook queda escuchando. Para simular el envío de datos, basta un `curl`:
 
 ```bash
 curl -X POST "http://<host>:5678/webhook-test/<id>" \
@@ -22,32 +22,22 @@ curl -X POST "http://<host>:5678/webhook-test/<id>" \
   -d '{"nombre":"Marcio","email":"marcio@test.com"}'
 ```
 
-El flujo se ejecutó correctamente (los 4 nodos en verde) y se recibió el correo de notificación esperado.
+Si todo va bien, los 4 nodos se ponen verdes en cadena y el correo llega en segundos. Si alguno queda en rojo, ese es el punto exacto donde hay que mirar — probablemente algo parecido ya está en la matriz de errores de abajo.
+
+## Pasar de desarrollo a producción
+
+El workflow es portable, así que migrarlo es cuestión de repetir la importación en otro entorno. Los puntos que sí cambian:
+
+**Credenciales.** Como no viajan en el JSON, hay que crear una nueva desde cero: un proyecto en [Google Cloud Console](https://console.cloud.google.com), la Gmail API habilitada, la pantalla de consentimiento OAuth configurada como "External" (con el correo destino agregado en "Test users"), y un Client ID tipo "Web application". El redirect URI tiene que coincidir exactamente con lo que muestra n8n al crear la credencial — algo como `http://<host>:5678/rest/oauth2-credential/callback`.
+
+**La URL del Webhook.** Cambia según el host donde quede desplegado. Una vez importado el workflow hay que activarlo (el toggle de arriba a la derecha) para que la Production URL quede escuchando de verdad.
+
+**Un detalle que puede trabar todo:** si el entorno de producción se accede por IP en vez de un dominio, Google directamente rechaza esa IP como redirect URI válido. La salida rápida es usar [nip.io](https://nip.io), que convierte cualquier IP en un subdominio funcional (`192.168.1.10` se vuelve `192.168.1.10.nip.io`) — solo hay que apuntar `N8N_HOST`, `WEBHOOK_URL` y `N8N_EDITOR_BASE_URL` a ese dominio en el `docker-compose.yml`.
 
 ## Matriz de Incidencias Técnicas
 
-| # | Error encontrado | Causa | Solución |
+| # | Error | Causa | Solución |
 |---|---|---|---|
-| 1 | `fatal: detected dubious ownership in repository` al hacer `git checkout` | El repositorio se había clonado usando `sudo` (usuario root), por lo que Git no reconocía al usuario normal como dueño de los archivos | Se corrigió el dueño de la carpeta con `sudo chown -R usuario:usuario <ruta>` y se agregó una excepción con `git config --global --add safe.directory <ruta>` |
-| 2 | `permission denied while trying to connect to the docker API` al correr `docker compose up` | El usuario normal no pertenecía al grupo `docker`, por lo que no tenía permisos para hablar con el servicio de Docker | Se agregó el usuario al grupo con `sudo usermod -aG docker $USER` y se reinició la sesión |
-| 3 | Google rechazaba la URI de redirección OAuth (`Redireccionamiento no válido: debe terminar con un dominio público de nivel superior`) | Google no permite usar una dirección IP directa como redirect URI en credenciales OAuth2, solo dominios válidos | Se utilizó el servicio gratuito **nip.io**, que convierte una IP en un subdominio válido (ej. `172.16.30.128.nip.io`), y se configuraron las variables `N8N_HOST`, `WEBHOOK_URL` y `N8N_EDITOR_BASE_URL` en el `docker-compose.yml` para usar ese dominio en vez de la IP directa |
-
-
-## Cómo importar este workflow en otro entorno (producción)
-
-El archivo `workflows/workflow.json` es portable y puede importarse en cualquier instancia de n8n corriendo en Docker. Pasos:
-
-1. **Traer el archivo**: hacer `git pull` sobre `main` para obtener `workflows/workflow.json`.
-
-2. **Importar en n8n**: dentro del editor de n8n, ir al menú `⋯` (arriba, junto al nombre del workflow) → **"Import from File"** → seleccionar `workflows/workflow.json`.
-
-3. **Reconfigurar credenciales**: por seguridad, n8n **no exporta las credenciales** dentro del JSON. El nodo `Gmail` aparecerá marcado con un error de credencial faltante. Es necesario:
-   - Crear un proyecto en [Google Cloud Console](https://console.cloud.google.com) (o usar uno existente).
-   - Habilitar la Gmail API.
-   - Configurar la pantalla de consentimiento OAuth (tipo "External", agregando el correo de destino como "Test user").
-   - Crear un **OAuth Client ID** (tipo "Web application"), usando como *Authorized redirect URI* la que muestre n8n en el formulario de credenciales (formato: `http://<host>:5678/rest/oauth2-credential/callback`).
-   - Pegar el **Client ID** y **Client Secret** generados en la credencial de n8n y autorizar con la cuenta de Google correspondiente.
-
-4. **Ajustar el Webhook**: la **Production URL** del nodo Webhook cambia según el host donde se despliegue. Cuando ya se haya importado, hay que **activar el workflow** (toggle superior derecho) para que dicha URL quede escuchando en modo producción.
-
-> **Nota:** si el entorno de producción se accede por dirección IP (en vez de un dominio con nombre), Google no acepta IPs "normales o planas" en el *redirect URI* de OAuth. Se recomienda usar el servicio gratuito [nip.io](https://nip.io) para convertir la IP en un subdominio válido (ej. `192.168.1.10` → `192.168.1.10.nip.io`), configurando las variables de entorno `N8N_HOST`, `WEBHOOK_URL` y `N8N_EDITOR_BASE_URL` en el `docker-compose.yml` para que apunten a ese dominio.
+| 1 | `dubious ownership in repository` al hacer `git checkout` | El repo se clonó con `sudo`, así que Git no reconocía al usuario normal como dueño | `sudo chown -R usuario:usuario <ruta>` + `git config --global --add safe.directory <ruta>` |
+| 2 | `permission denied` al conectar con la API de Docker | El usuario no estaba en el grupo `docker` | `sudo usermod -aG docker $USER` y reiniciar sesión |
+| 3 | Google rechazaba el redirect URI de OAuth por no ser un dominio válido | Google no acepta IPs crudas en las credenciales OAuth2 | Usar nip.io para convertir la IP en subdominio, y ajustar las variables de host en el `docker-compose.yml` |
