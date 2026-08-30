@@ -70,6 +70,26 @@
       "position": [448, 0],
       "id": "93b64728-0d12-483d-a541-a8217fc98b54",
       "name": "If"
+    },
+    {
+      "parameters": {
+        "sendTo": "icooper.mx@gmail.com",
+        "subject": "Nueva notificación - Tarea n8n para TA1",
+        "message": "=Nombre: {{ $json.nombre }} Email: {{ $json.email }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [672, -96],
+      "id": "089b1668-1f0a-497d-afe9-f65b0f1553d2",
+      "name": "Send a message",
+      "webhookId": "b033b873-293d-416e-a9f9-abd4147b47bc",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "H7LA3gzttADbZTrr",
+          "name": "Gmail account"
+        }
+      }
     }
   ],
   "pinData": {},
@@ -90,6 +110,17 @@
         [
           {
             "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
             "type": "main",
             "index": 0
           }
