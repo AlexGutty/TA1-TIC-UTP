@@ -4,7 +4,7 @@
 
 ---
 
-## 📌 Descripción del proyecto
+## Descripción del proyecto
 
 Este proyecto construye un flujo de automatización funcional en [n8n](https://n8n.io) corriendo en un contenedor de Docker con persistencia de datos. El flujo recibe datos (como si vinieran de un formulario externo), los procesa y envía una notificación por correo.
 
@@ -21,7 +21,7 @@ El código, los archivos JSON del flujo y la documentación se gestionan de form
 
 ---
 
-## 🧱 Stack
+## Stack
 
 | Tecnología | Uso |
 |---|---|
@@ -32,7 +32,7 @@ El código, los archivos JSON del flujo y la documentación se gestionan de form
 
 ---
 
-## 🚀 Puesta en marcha (resumen)
+## Puesta en marcha (resumen)
 
 1. Clonar el repositorio:
    ```bash
@@ -51,7 +51,7 @@ El código, los archivos JSON del flujo y la documentación se gestionan de form
 
 ---
 
-## 📚 Documentación
+## Documentación
 
 | Documento | Contenido |
 |---|---|
@@ -64,7 +64,7 @@ El código, los archivos JSON del flujo y la documentación se gestionan de form
 
 ---
 
-## 🗂️ Estructura del repositorio
+## Estructura del repositorio
 
 ```
 .
@@ -84,7 +84,7 @@ El código, los archivos JSON del flujo y la documentación se gestionan de form
 
 ---
 
-## 👥 Roles del equipo
+## Roles del equipo
 
 | Integrante | Componente | Rama |
 |---|---|---|
@@ -95,7 +95,7 @@ El código, los archivos JSON del flujo y la documentación se gestionan de form
 
 ---
 
-## 📸 Evidencias de trabajo en equipo
+## Evidencias de trabajo en equipo
 
 - Aprobación de Pull Requests entre compañeros (mínimo 2 por integrante).
 - Capturas de cada integrante trabajando en [`docs/PRUEBAS.md`](docs/PRUEBAS.md).
@@ -103,6 +103,6 @@ El código, los archivos JSON del flujo y la documentación se gestionan de form
 
 ---
 
-## ⚖️ Nota sobre la autenticación
+## Nota sobre la autenticación
 
 n8n **no guarda las credenciales dentro del JSON** del flujo por seguridad. Para ejecutar la notificación por Gmail, cada integrante debe autorizar su propia cuenta OAuth2 en el nodo (pasos completos en [`docs/WORKFLOW.md`](docs/WORKFLOW.md)).
