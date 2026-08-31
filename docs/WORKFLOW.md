@@ -32,10 +32,8 @@ El workflow es portable, así que migrarlo es cuestión de repetir la importaci�
 
 **Un detalle que puede trabar todo:** si el entorno de producción se accede por IP en vez de un dominio, Google directamente rechaza esa IP como redirect URI válido. La salida rápida es usar [nip.io](https://nip.io), que convierte cualquier IP en un subdominio funcional (`192.168.1.10` se vuelve `192.168.1.10.nip.io`) — solo hay que apuntar `N8N_HOST`, `WEBHOOK_URL` y `N8N_EDITOR_BASE_URL` a ese dominio en el `docker-compose.yml`.
 
-## Matriz de Incidencias Técnicas
+## Errores encontrados
 
-| # | Error | Causa | Solución |
-|---|---|---|---|
-| 1 | `dubious ownership in repository` al hacer `git checkout` | El repo se clonó con `sudo`, así que Git no reconocía al usuario normal como dueño | `sudo chown -R usuario:usuario <ruta>` + `git config --global --add safe.directory <ruta>` |
-| 2 | `permission denied` al conectar con la API de Docker | El usuario no estaba en el grupo `docker` | `sudo usermod -aG docker $USER` y reiniciar sesión |
-| 3 | Google rechazaba el redirect URI de OAuth por no ser un dominio válido | Google no acepta IPs crudas en las credenciales OAuth2 | Usar nip.io para convertir la IP en subdominio, y ajustar las variables de host en el `docker-compose.yml` |
+Los errores que surgieron durante el taller (configuración de Docker, permisos de Git, OAuth de Google, etc.) y sus soluciones están detallados en la **[Matriz de Incidencias Técnicas](INCIDENCIAS.md)**.
+
+> Para ver las pruebas ejecutadas y las capturas de cada integrante, ir a [`PRUEBAS.md`](PRUEBAS.md).
